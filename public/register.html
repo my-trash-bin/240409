@@ -3,17 +3,26 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Home</title>
+    <title>Register</title>
     <link rel="stylesheet" href="/style.css" />
     <script src="/script.js"></script>
   </head>
   <body>
-    <div id="sessionDisplay">Loading...</div>
+    <input type="text" id="nickname" placeholder="Enter nickname" />
+    <button type="button" id="register">Register</button>
     <script>
       (async () => {
         const session = await getSession();
-        displaySession(session, document.getElementById("sessionDisplay"));
+        if (!session) {
+          alert("Not logged in.");
+          location.href = "/";
+        }
       })();
+      document.getElementById("register", () => {
+        (async () => {
+          //
+        })();
+      });
     </script>
   </body>
 </html>

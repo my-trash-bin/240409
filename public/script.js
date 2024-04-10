@@ -27,8 +27,48 @@ function API(method, url, params) {
   });
 }
 
+/**
+ * @returns {import('../src/JwtPayload').JwtPayload | null}
+ */
 async function getSession() {
   const result = await API("GET", "/api/auth/session");
-  console.log(result);
   return result;
+}
+
+const escapeHtmlMap = { "<": "&lt;", ">": "&gt;", "&": "&amp;" };
+
+/**
+ * @param {string} input
+ * @returns {string}
+ */
+function escapeHtml(input) {
+  return input.replace(/<>&/, (toReplace) => escapeHtmlMap[toReplace]);
+}
+
+/**
+ * @param {import('../src/JwtPayload').JwtPayload | null} session
+ * @param {HTMLElement} container
+ * @return {void}
+ */
+function displaySession(session, container) {
+  if (!session) {
+    container.innerHTML = "Not logged in";
+    return;
+  }
+  switch (session.state.phase) {
+    case "oauthOnly":
+      container.innerHTML = `
+        <div>
+          OAuth authenticated, not registered. ID: ${session.state.id}
+        </div>
+      `;
+      break;
+    case "authenticated":
+      container.innerHTML = `
+        <div>
+          Registered. ID: ${session.state.id},
+          nickname: ${escapeHtml(session.state.nickname)}
+        </div>
+      `;
+  }
 }
