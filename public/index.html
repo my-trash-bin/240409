@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>240409</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/script.js"></script>
+  </head>
+  <body>
+    <script>
+      (async () => {
+        const session = await getSession();
+        alert(JSON.stringify(session, null, 2));
+      })();
+    </script>
+  </body>
+</html>
