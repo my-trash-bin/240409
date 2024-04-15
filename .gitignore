@@ -1,5 +1,8 @@
-/node_modules
-/build
+node_modules
+build
 package-lock.json
 .env*
 !.env*.sample
+.next
+tsconfig.tsbuildinfo
+server/public

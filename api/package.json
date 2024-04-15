@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "name": "@this-project/api",
+  "dependencies": {
+    "typescript": "^5.4.4"
+  }
+}
