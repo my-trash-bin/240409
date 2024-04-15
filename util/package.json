@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "name": "@this-project/util",
+  "dependencies": {
+    "typescript": "^5.4.4"
+  }
+}

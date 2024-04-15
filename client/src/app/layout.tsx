@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { ReactNode } from 'react';
-import '../globals.css';
 
 export const metadata: Metadata = {
   title: '240409 Auth test',

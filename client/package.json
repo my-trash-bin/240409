@@ -6,6 +6,7 @@
   },
   "dependencies": {
     "@this-project/api": "file:../api",
+    "@this-project/util": "file:../util",
     "@types/node": "20.12.7",
     "@types/react": "^18.2.78",
     "next": "^14.2.1",
