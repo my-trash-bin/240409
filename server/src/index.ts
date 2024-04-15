@@ -6,6 +6,7 @@ import Jwt from "jsonwebtoken";
 import Passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as JwtStrategy } from "passport-jwt";
+import { Strategy as KakaoStrategy } from "passport-kakao";
 
 import { JwtPayload, deserialize, serialize } from "./JwtPayload.js";
 import { isUniqueConstraintError } from "./prisma/isUniqueConstraintError.js";
@@ -18,6 +19,51 @@ app.use(Express.json());
 app.use(CookieParser());
 app.use(Passport.initialize());
 app.use(Express.static("public"));
+
+Passport.use(
+  new KakaoStrategy(
+    {
+      clientID: env("KAKAO_CLIENT_ID"),
+      clientSecret: env("KAKAO_CLIENT_SECRET"),
+      callbackURL: "/api/auth/kakao/callback",
+      passReqToCallback: true,
+    },
+    async function (req, accessToken, refreshToken, profile, done) {
+      const userId =
+        req.user?.state.phase === "authenticated"
+          ? req.user.state.id
+          : undefined;
+      const oauthAccount = await prisma.oAuthAccount.upsert({
+        where: {
+          provider_externalId: {
+            provider: "kakao",
+            externalId: `${profile.id}`,
+          },
+        },
+        create: {
+          provider: "kakao",
+          externalId: `${profile.id}`,
+          accessToken,
+          refreshToken,
+          ...(userId && { user: { connect: { id: userId } } }),
+        },
+        update: { accessToken, refreshToken },
+        select: { id: true, user: true },
+      });
+      if (!oauthAccount.user) {
+        done(null, { state: { phase: "oauthOnly", id: oauthAccount.id } });
+      } else {
+        done(null, {
+          state: {
+            phase: "authenticated",
+            id: oauthAccount.user.id,
+            nickname: oauthAccount.user.nickname,
+          },
+        });
+      }
+    }
+  )
+);
 
 Passport.use(
   new GoogleStrategy(
@@ -44,7 +90,7 @@ Passport.use(
           ...(userId && { user: { connect: { id: userId } } }),
         },
         update: { accessToken, refreshToken },
-        include: { user: true },
+        select: { id: true, user: true },
       });
       if (!oauthAccount.user) {
         done(null, { state: { phase: "oauthOnly", id: oauthAccount.id } });
@@ -97,6 +143,41 @@ app.use(
         next();
       }
     )(req, res, next);
+  }
+);
+
+app.get(
+  "/api/auth/kakao",
+  Passport.authenticate("kakao", {
+    scope: "profile",
+    session: false,
+  })
+);
+
+app.get(
+  "/api/auth/kakao/callback",
+  Passport.authenticate("kakao", {
+    failureRedirect: "/login",
+    session: false,
+  }),
+  async function (req, res) {
+    switch (req.user?.state.phase) {
+      case "oauthOnly": {
+        const payload: JwtPayload = { state: req.user.state };
+        const jwt = Jwt.sign(payload, env("JWT_KEY"));
+        res.cookie("jwt", jwt, { httpOnly: true, maxAge: 86400000 });
+        res.redirect("/register.html");
+        break;
+      }
+      case "authenticated": {
+        const payload: JwtPayload = { state: req.user.state };
+        const jwt = Jwt.sign(payload, env("JWT_KEY"));
+        res.cookie("jwt", jwt, { httpOnly: true, maxAge: 86400000 });
+        res.redirect("/");
+        break;
+      }
+      default:
+    }
   }
 );
 
