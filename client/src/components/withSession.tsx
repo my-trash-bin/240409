@@ -4,7 +4,7 @@ import { API } from "../API";
 import { Session } from "../Session";
 
 export function withSession<T>(
-  component: ComponentType<T & Record<"session", Session>>
+  component: ComponentType<T & Record<"session", Session | undefined>>
 ): ComponentType<T> {
   const Component = component;
 

@@ -38,4 +38,4 @@ export default requireSession(function Page({ session }) {
       </button>
     </div>
   );
-});
+}, "oauthOnly");
