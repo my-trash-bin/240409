@@ -8,7 +8,8 @@ import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import { Strategy as JwtStrategy } from "passport-jwt";
 
 import { JwtPayload, deserialize, serialize } from "./JwtPayload.js";
-import { isUniqueConstraintError, prisma } from "./prisma.js";
+import { isUniqueConstraintError } from "./prisma/isUniqueConstraintError.js";
+import { prisma } from "./prisma/prisma.js";
 import { env } from "./util/env.js";
 
 const app = Express();
@@ -113,17 +114,19 @@ app.get(
   async function (req, res) {
     switch (req.user?.state.phase) {
       case "oauthOnly": {
-        const payload: JwtPayload = {
-          state: { phase: "oauthOnly", id: req.user.state.id },
-        };
+        const payload: JwtPayload = { state: req.user.state };
         const jwt = Jwt.sign(payload, env("JWT_KEY"));
         res.cookie("jwt", jwt, { httpOnly: true, maxAge: 86400000 });
         res.redirect("/register.html");
         break;
       }
-      case "authenticated":
-        // TODO:
+      case "authenticated": {
+        const payload: JwtPayload = { state: req.user.state };
+        const jwt = Jwt.sign(payload, env("JWT_KEY"));
+        res.cookie("jwt", jwt, { httpOnly: true, maxAge: 86400000 });
+        res.redirect("/");
         break;
+      }
       default:
     }
   }
@@ -131,6 +134,16 @@ app.get(
 
 app.get("/api/auth/session", (req, res) => {
   res.json(req.user ?? null);
+});
+
+app.get("/api/auth/logout", (_req, res) => {
+  res.clearCookie("jwt");
+  res.redirect("/");
+});
+
+app.post("/api/auth/logout", (_req, res) => {
+  res.clearCookie("jwt");
+  res.json({ ok: true });
 });
 
 app.post("/api/auth/register", async (req, res) => {
@@ -142,13 +155,23 @@ app.post("/api/auth/register", async (req, res) => {
     res.status(400).json({ message: "Parameter `nickname` is missing" });
     return;
   }
+  const state = req.user.state;
   try {
-    await prisma.user.upsert({
-      where: { id: req.user.state.id },
-      create: { nickname: req.body.nickname },
-      update: { nickname: req.body.nickname },
+    const oAuth = await prisma.oAuthAccount.update({
+      where: { id: state.id },
+      data: { user: { create: { nickname: req.body.nickname } } },
+      select: { user: { select: { id: true, nickname: true } } },
     });
-    res.json({ success: false });
+    const payload: JwtPayload = {
+      state: {
+        phase: "authenticated",
+        id: oAuth.user!.id,
+        nickname: oAuth.user!.nickname,
+      },
+    };
+    const jwt = Jwt.sign(payload, env("JWT_KEY"));
+    res.cookie("jwt", jwt, { httpOnly: true, maxAge: 86400000 });
+    res.json({ success: true });
   } catch (e) {
     if (isUniqueConstraintError(e)) {
       res.json({ success: false });

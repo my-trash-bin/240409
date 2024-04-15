@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.12.1",
-    "@this-project/api": "file:../api",
+    "@this-project/util": "file:../util",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",

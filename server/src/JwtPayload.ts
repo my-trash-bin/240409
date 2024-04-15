@@ -1,4 +1,4 @@
-import { prisma } from "./prisma.js";
+import { prisma } from "./prisma/prisma.js";
 
 export interface JwtPayloadStateAuthenticated {
   phase: "authenticated";
