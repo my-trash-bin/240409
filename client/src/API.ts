@@ -63,7 +63,7 @@ export function API<
     Extract<API_DEFINITION, { method: TMethod; path: TPath }>["response"]
   >(
     method,
-    path.replace(/:.*?\//, (a) => `${params?.[a]}/`),
+    path.replace(/:(.*?)(\/|$)/g, (_, a, b) => `${params?.[a]}${b}`),
     payload as any
   ) as any;
 }
