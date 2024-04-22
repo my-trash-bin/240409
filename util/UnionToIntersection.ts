@@ -1,5 +1,5 @@
 export type UnionToIntersection<T> = (
-  T extends any ? (x: T) => any : never
-) extends (x: infer R) => any
-  ? R
+  T extends any ? (arg: T) => any : never
+) extends (arg: infer I) => any
+  ? I
   : never;

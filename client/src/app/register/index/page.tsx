@@ -13,12 +13,9 @@ export default requireSession(function Page({ session }) {
   const handleNicknameChange = useInputChangeEventHandler(setNickname);
   const router = useRouter();
   const [handleClick] = useAsyncCallback(async () => {
-    const result = await API<"POST", "/api/auth/register">(
-      "POST",
-      "/api/auth/register",
-      undefined,
-      { nickname }
-    );
+    const result = await API("POST:/api/auth/register", undefined, {
+      nickname,
+    });
     if (result.success) {
       router.push("/welcome.html");
     } else {

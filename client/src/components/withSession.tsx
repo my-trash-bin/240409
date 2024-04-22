@@ -12,10 +12,7 @@ export function withSession<T>(
     const [session, setSession] = useState<Session | null | undefined>(null);
     useEffect(() => {
       (async () => {
-        setSession(
-          (await API<"GET", "/api/auth/session">("GET", "/api/auth/session"))
-            ?.state
-        );
+        setSession((await API("GET:/api/auth/session"))?.state);
       })();
     }, []);
 
